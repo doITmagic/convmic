@@ -2,19 +2,20 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
-	"log"
-	"math/rand"
 	"net"
 	"path"
 	"runtime"
-	"strconv"
-	"unicode"
+
+	profile "github.com/pkg/profile"
 
 	"github.com/doitmagic/convmic/pb"
+	"github.com/doitmagic/convmic/src/server/helper"
 	"github.com/doitmagic/convmic/src/server/internal"
 	"github.com/doitmagic/convmic/src/server/providers"
 	"github.com/doitmagic/convmic/src/server/service"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -24,6 +25,47 @@ const (
 
 type server struct {
 	pb.UnimplementedConvertServiceServer
+}
+
+//start server
+func main() {
+
+	//profiling part if it use option " -cpuprofile true"
+	var cpuprofile bool
+	flag.BoolVar(&cpuprofile, "cpuprofile", false, "write cpu profile to filen")
+
+	flag.Parse()
+	if cpuprofile {
+		defer profile.Start(profile.ProfilePath(appPath())).Stop()
+		log.Printf("Start CPU profiling")
+	}
+
+	//populate dummy data
+	helper.PopulateData(internal.GetInstance())
+
+	//set the provider, it wil be loaded from config
+	provider := providers.NewCoingeckoProvider()
+
+	//Load all currencies from provider and set the price
+	err := syncAllCurrencies(provider)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	g := grpc.NewServer()
+
+	lis, err := net.Listen("tcp", "0.0.0.0:"+port)
+	if err != nil {
+		panic("failed to listen: " + err.Error())
+	}
+
+	pb.RegisterConvertServiceServer(g, &server{})
+	log.Printf("Star server on port %s", port)
+
+	err = g.Serve(lis)
+	if err != nil {
+		panic("failed to start grpc: " + err.Error())
+	}
 }
 
 //List all currency from memory whith pagination
@@ -73,46 +115,14 @@ func (s *server) Convert(ctx context.Context, req *pb.GetCurrenciesConvertReques
 	return &pb.GetCurrenciesConvertResponse{}, nil
 }
 
-//start server
-func main() {
-
-	populateData()
-
-	provider := providers.NewCoingeckoProvider()
-	SyncAllCurrencies(provider)
-
-	g := grpc.NewServer()
-
-	lis, err := net.Listen("tcp", "0.0.0.0:"+port)
-	if err != nil {
-		panic("failed to listen: " + err.Error())
-	}
-
-	pb.RegisterConvertServiceServer(g, &server{})
-	log.Printf("Star server on port %s", port)
-
-	err = g.Serve(lis)
-	if err != nil {
-		panic("failed to start grpc: " + err.Error())
-	}
-}
-
-func SyncAllCurrencies(provider service.Provider) {
-	provider.GetCurrencies(context.Background())
+func syncAllCurrencies(provider service.Provider) error {
+	//to be be implemented
+	//provider.GetCurrencies(context.Background())
+	return nil
 }
 
 //appPath get the path of application
 func appPath() string {
 	_, filename, _, _ := runtime.Caller(1)
 	return path.Join(path.Dir(filename), "./../")
-}
-
-//populateData populate data until using api request
-func populateData() {
-	for r := 'a'; r < 'g'; r++ {
-		R := unicode.ToUpper(r)
-		for j := 0; j < 11; j++ {
-			internal.GetInstance().SetCurrency(fmt.Sprintf("%c", R)+"test"+strconv.Itoa(rand.Intn(100)), 100)
-		}
-	}
 }
