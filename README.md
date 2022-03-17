@@ -3,7 +3,8 @@
 
 
 ## Test files 
-are in bitbucket.org/doitmagic/convmic/src/server/testing
+We use `BDT testing`, using `ginkgo` && `gomega` are in bitbucket.org/doitmagic/convmic/src/server/testing .
+The test coverage is small, just to demonstrate how is implemented
 ```
 cd src/server/testing
 go test

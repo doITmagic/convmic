@@ -10,6 +10,7 @@ import (
 	"github.com/doitmagic/convmic/src/server/internal"
 )
 
+//The test coverage is small, just to demonstrate how is implemented
 var _ = Describe("Internal tests", func() {
 	Context("test appcontext", func() {
 
