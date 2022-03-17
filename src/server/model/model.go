@@ -13,9 +13,9 @@ type CurrencyConvert struct {
 }
 
 type CurrencyConverted struct {
-    from           string
-    from_amount    float64
-    to             string
-    to_amount      float64
-    converted_time time.Time
+    From           string
+    FromAmount    float64
+    To             string
+    ToAmount      float64
+    ConvertedTime time.Time
 }

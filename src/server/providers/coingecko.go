@@ -3,9 +3,9 @@ package providers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/doitmagic/convmic/src/server/internal"
 	"github.com/doitmagic/convmic/src/server/model"
@@ -55,6 +55,24 @@ func NewCoingeckoProvider(ctx context.Context) *CoingeckoProvider {
 }
 
 func (p *CoingeckoProvider) Convert(ctx context.Context, from []model.CurrencyConvert, to string) ([]model.CurrencyConverted, error) {
+	log.Info("Privider Convert")
+	appContext := internal.GetInstance()
+	toCurrencyValue, err := appContext.GetCurrencyValue(to)
+	if err == nil {
+		return []model.CurrencyConverted{}, fmt.Errorf("can not convert to currency %s because does not exist", to)
+	}
+
+	for _, currencyConvert := range from {
+		value, err := appContext.GetCurrencyValue(currencyConvert.Name)
+		if err == nil {
+			fromCurrencyTotalValue := currencyConvert.Amount * value
+			if fromCurrencyTotalValue > 0 {
+				rez := fromCurrencyTotalValue / toCurrencyValue
+				fmt.Printf("%v ammount of currency %s represent %v of currency %s  \n", currencyConvert.Amount, currencyConvert.Name, rez, to)
+			}
+		}
+	}
+
 	return []model.CurrencyConverted{}, nil
 }
 
@@ -81,7 +99,7 @@ func (p *CoingeckoProvider) SyncCurrencies(limitPage int) (bool, error) {
 		if i < limitPage {
 
 			//request is executed in goroutines
-			//no problem with concurrent access of context variable currencies 
+			//no problem with concurrent access of context variable currencies
 			// because we use sync.map{}
 			go func(j int) {
 				var tIds []string
@@ -95,7 +113,7 @@ func (p *CoingeckoProvider) SyncCurrencies(limitPage int) (bool, error) {
 					tIds = append(tIds, coinItem.ID)
 				}
 
-				coinsMarket, err := p.GetMarketCurrencies(tIds, strconv.Itoa(j))
+				coinsMarket, err := p.GetMarketCurrencies(tIds, start, stop)
 				if err != nil {
 					log.Error(err)
 				}
@@ -111,6 +129,7 @@ func (p *CoingeckoProvider) SyncCurrencies(limitPage int) (bool, error) {
 	return true, nil
 }
 
+//PopulateProviderCurrencies add all currencies names to context currencies
 func (p *CoingeckoProvider) PopulateProviderCurrencies(ctx context.Context) error {
 	coinList, err := p.coinsList()
 	if err != nil {
@@ -126,15 +145,14 @@ func (p *CoingeckoProvider) PopulateProviderCurrencies(ctx context.Context) erro
 	return nil
 }
 
-func (p *CoingeckoProvider) GetMarketCurrencies(idsParam []string, page string) (*CoinsMarket, error) {
+//GetMarketCurrencies get all market currency values from start to stop records
+func (p *CoingeckoProvider) GetMarketCurrencies(idsParam []string, start, stop int) (*CoinsMarket, error) {
 
 	params := url.Values{}
 	params.Add("vs_currency", "usd")
-	params.Add("ids", strings.Join(idsParam, ","))
-	//params.Add("per_page", "150")
-	//params.Add("page", page)
-	params.Add("start", "0")
-	params.Add("limit", "150")
+	//params.Add("ids", strings.Join(idsParam, ","))
+	params.Add("start", strconv.Itoa(start))
+	params.Add("limit", strconv.Itoa(stop))
 
 	resp, err := p.c.MakeReq("coins/markets", params)
 	if err != nil {
@@ -148,28 +166,7 @@ func (p *CoingeckoProvider) GetMarketCurrencies(idsParam []string, page string) 
 	return data, nil
 }
 
-// func (p *CoingeckoProvider) getMultiplePrices(ids []string, vsCurrencies []string) (*map[string]map[string]float32, error) {
-// 	params := url.Values{}
-// 	idsParam := strings.Join(ids[:], ",")
-// 	vsCurrenciesParam := strings.Join(vsCurrencies[:], ",")
-
-// 	params.Add("ids", idsParam)
-// 	params.Add("vs_currencies", vsCurrenciesParam)
-
-// 	resp, err := p.c.MakeReq("simple/price", params)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	t := make(map[string]map[string]float32)
-// 	err = json.Unmarshal(resp, &t)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &t, nil
-// }
-
+//coinsList private method to list all currencies from provider
 func (p *CoingeckoProvider) coinsList() (*CoinList, error) {
 
 	params := url.Values{}

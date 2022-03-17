@@ -93,7 +93,8 @@ func paginate(names []string, allCurrencies map[string]string, page, perPage int
 func (c *AppContext) GetCurrencyValue(name string) (float64, error) {
 	value, ok := c.currencies.Load(name)
 	if ok {
-		return value.(float64), nil
+		valueFloat, _ := strconv.ParseFloat(value.(string), 64)
+		return valueFloat, nil
 	}
 	return 0, fmt.Errorf("the currency %s does not exist", name)
 }

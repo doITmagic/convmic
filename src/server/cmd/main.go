@@ -14,6 +14,7 @@ import (
 	"github.com/doitmagic/convmic/pb"
 	"github.com/doitmagic/convmic/src/server/helper"
 	"github.com/doitmagic/convmic/src/server/internal"
+	"github.com/doitmagic/convmic/src/server/model"
 	"github.com/doitmagic/convmic/src/server/providers"
 	"github.com/doitmagic/convmic/src/server/service"
 	log "github.com/sirupsen/logrus"
@@ -27,6 +28,8 @@ const (
 type server struct {
 	pb.UnimplementedConvertServiceServer
 }
+
+var provider = providers.NewCoingeckoProvider(context.Background())
 
 //start server
 func main() {
@@ -45,11 +48,10 @@ func main() {
 	helper.PopulateData(internal.GetInstance())
 
 	//set the provider, it wil be loaded from config
-	provider := providers.NewCoingeckoProvider(context.Background())
 
 	//Load all currencies from provider and set the price
 	//on provided seconds interval
-	syncAllCurrencies(provider, 10)
+	go syncAllCurrencies(provider, 10)
 
 	g := grpc.NewServer()
 
@@ -101,6 +103,7 @@ func (s *server) List(ctx context.Context, req *pb.GetListCurrenciesRequest) (*p
 //if are more will make a batch convert
 func (s *server) Convert(ctx context.Context, req *pb.GetCurrenciesConvertRequest) (*pb.GetCurrenciesConvertResponse, error) {
 
+	fromCurrenciesConvert := []model.CurrencyConvert{}
 	if req == nil {
 		return nil, fmt.Errorf("request is nil")
 	}
@@ -108,10 +111,16 @@ func (s *server) Convert(ctx context.Context, req *pb.GetCurrenciesConvertReques
 	fromCurrencies := req.GetFrom()
 	toCurrency := req.GetTo()
 	for _, currencyPb := range fromCurrencies {
-		fmt.Println("convert: ", currencyPb.GetCurrencyName(), " to ", toCurrency)
+		fromCurrenciesConvert = append(fromCurrenciesConvert, model.CurrencyConvert{Name: currencyPb.GetCurrencyName(), Amount: float64(currencyPb.GetCurrencyQty())})
+		log.Infof("receive request to convert %v of %s to %s", currencyPb.GetCurrencyQty(), currencyPb.GetCurrencyName(), toCurrency)
 	}
 
-	return &pb.GetCurrenciesConvertResponse{}, nil
+	convertedResp, err := ConvertCurrencies(provider, ctx, fromCurrenciesConvert, toCurrency)
+	if err != nil {
+		return &pb.GetCurrenciesConvertResponse{}, err
+	}
+
+	return convertedResp, nil
 }
 
 func syncAllCurrencies(provider service.Provider, secondsInterval int) {
@@ -121,6 +130,20 @@ func syncAllCurrencies(provider service.Provider, secondsInterval int) {
 		provider.SyncCurrencies(2)
 	}
 
+}
+
+func ConvertCurrencies(provider service.Provider, ctx context.Context, from []model.CurrencyConvert, to string) (*pb.GetCurrenciesConvertResponse, error) {
+	converted, err := provider.Convert(ctx, from, to)
+	if err != nil {
+		return nil, err
+	}
+	convertedResp := pb.GetCurrenciesConvertResponse{}
+
+	for _, conv := range converted {
+		convertedResp.Converted = append(convertedResp.Converted, &pb.CurrencyConvertResponse{From: conv.From, FromAmount: float32(conv.FromAmount), To: conv.To, ToAmount: float32(conv.ToAmount)})
+	}
+
+	return &convertedResp, nil
 }
 
 //appPath get the path of application
