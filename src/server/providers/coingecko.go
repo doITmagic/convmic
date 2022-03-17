@@ -55,7 +55,7 @@ func NewCoingeckoProvider(ctx context.Context) *CoingeckoProvider {
 }
 
 func (p *CoingeckoProvider) Convert(ctx context.Context, from []model.CurrencyConvert, to string) ([]model.CurrencyConverted, error) {
-	log.Info("Privider Convert")
+
 	appContext := internal.GetInstance()
 	toCurrencyValue, err := appContext.GetCurrencyValue(to)
 	if err == nil {
@@ -67,6 +67,7 @@ func (p *CoingeckoProvider) Convert(ctx context.Context, from []model.CurrencyCo
 		if err == nil {
 			fromCurrencyTotalValue := currencyConvert.Amount * value
 			if fromCurrencyTotalValue > 0 {
+				log.Info("Privider Convert",fromCurrencyTotalValue,toCurrencyValue)
 				rez := fromCurrencyTotalValue / toCurrencyValue
 				fmt.Printf("%v ammount of currency %s represent %v of currency %s  \n", currencyConvert.Amount, currencyConvert.Name, rez, to)
 			}
