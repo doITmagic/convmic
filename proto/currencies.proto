@@ -1,0 +1,51 @@
+syntax = "proto3";
+package convmic.currencies;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/doitmagic/convmic/pb";
+
+service ConvertService {
+    rpc List(GetListCurrenciesRequest) returns (GetListCurrenciesResponse) {}
+    rpc Convert(GetCurrenciesConvertRequest) returns (GetCurrenciesConvertResponse) {}
+}
+
+message CurrencyConvert {
+  string currency_name = 1;
+  float currency_qty  = 2;
+}
+
+
+message CurrencyConvertResponse {
+    string from = 1;
+    float from_amount = 2;
+    string to = 3;
+    float to_amount = 4;
+    google.protobuf.Timestamp convert_time = 5;
+}
+
+message Currency {
+    string name  = 1;
+    string value = 2;     
+}
+
+/* GetListCurrenciesRequest represents a query to get all currencies with pagination and result/page option. */
+message GetListCurrenciesRequest {
+    int32 page_number = 1;
+    int32 result_per_page = 2;
+}
+
+message GetListCurrenciesResponse {
+    int32 page_number = 1;
+    repeated Currency currencies = 2;
+}
+
+/* GetCurrenciesConvertRequest represents a convert query that can be used to conver (in the amount specified for each) one ore more currencies to a specific courency */
+message GetCurrenciesConvertRequest {
+    repeated CurrencyConvert from = 1;
+    string to = 2;
+}
+
+message GetCurrenciesConvertResponse {
+  repeated CurrencyConvertResponse converted = 1; 
+}
