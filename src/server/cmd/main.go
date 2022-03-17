@@ -49,7 +49,7 @@ func main() {
 
 	//Load all currencies from provider and set the price
 	//on provided seconds interval
-	go syncAllCurrencies(provider, 10)
+	syncAllCurrencies(provider, 10)
 
 	g := grpc.NewServer()
 
@@ -118,7 +118,7 @@ func syncAllCurrencies(provider service.Provider, secondsInterval int) {
 	d := time.NewTicker(time.Duration(secondsInterval) * time.Second)
 	for tm := range d.C {
 		log.Infof("START to sync currencies value from API provider at %v", tm.Local().GoString())
-		provider.SyncCurrencies(0, 2)
+		provider.SyncCurrencies(2)
 	}
 
 }

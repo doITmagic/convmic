@@ -31,7 +31,7 @@ func (p *CurrencylayerProvider) Convert(ctx context.Context, from []model.Curren
 	return []model.CurrencyConverted{}, nil
 }
 
-func (p *CurrencylayerProvider) SyncCurrencies(period, page int) (bool, error) {
+func (p *CurrencylayerProvider) SyncCurrencies(page int) (bool, error) {
 	//must be implemented
 	return true, nil
 }
