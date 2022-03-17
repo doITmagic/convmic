@@ -53,9 +53,7 @@ func doReq(req *http.Request, client *http.Client) ([]byte, error) {
 
 // MakeReq HTTP request helper
 func (c *Client) MakeReq(apiUrl string, params url.Values) ([]byte, error) {
-
 	url := fmt.Sprintf("%s/%s?%s", c.BaseURL, apiUrl, params.Encode())
-	//log.Infof("Request to %s", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err

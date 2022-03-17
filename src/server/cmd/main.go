@@ -7,6 +7,7 @@ import (
 	"net"
 	"path"
 	"runtime"
+	"time"
 
 	profile "github.com/pkg/profile"
 
@@ -47,10 +48,8 @@ func main() {
 	provider := providers.NewCoingeckoProvider(context.Background())
 
 	//Load all currencies from provider and set the price
-	err := syncAllCurrencies(provider)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//on provided seconds interval
+	go syncAllCurrencies(provider, 10)
 
 	g := grpc.NewServer()
 
@@ -115,10 +114,13 @@ func (s *server) Convert(ctx context.Context, req *pb.GetCurrenciesConvertReques
 	return &pb.GetCurrenciesConvertResponse{}, nil
 }
 
-func syncAllCurrencies(provider service.Provider) error {
-	//to be be implemented
-	go provider.SyncCurrencies(0, 2)
-	return nil
+func syncAllCurrencies(provider service.Provider, secondsInterval int) {
+	d := time.NewTicker(time.Duration(secondsInterval) * time.Second)
+	for tm := range d.C {
+		log.Infof("START to sync currencies value from API provider at %v", tm.Local().GoString())
+		provider.SyncCurrencies(0, 2)
+	}
+
 }
 
 //appPath get the path of application

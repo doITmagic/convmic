@@ -58,18 +58,31 @@ func (p *CoingeckoProvider) Convert(ctx context.Context, from []model.CurrencyCo
 	return []model.CurrencyConverted{}, nil
 }
 
-func (p *CoingeckoProvider) SyncCurrencies(period, limitPage int) (bool, error) {
+//SyncCurrencies get the currencies values with limited pages,
+//the page limit is required to not exceed the limits set by the API provider
+func (p *CoingeckoProvider) SyncCurrencies(limitPage int) (bool, error) {
 
+	//get all currencies from provider
 	coinList, err := p.coinsList()
 	if err != nil {
 		return false, err
 	}
 
+	if limitPage == 0 {
+		limitPage = 10
+	}
+
+	//calculate total numbers of currencies page for provider
 	totalMarketPageNr := len(*coinList) / 150
 
+	//for each page, if is lower then limit page execute
 	for i := 1; i <= totalMarketPageNr; i++ {
 		//limit page number request because of free API request number per minute
 		if i < limitPage {
+
+			//request is executed in goroutines
+			//no problem with concurrent access of context variable currencies 
+			// because we use sync.map{}
 			go func(j int) {
 				var tIds []string
 				var tmpCoinList CoinList
