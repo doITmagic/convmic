@@ -3,10 +3,10 @@ package internal
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
-	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type doFunc func(req *http.Request) (*http.Response, error)
@@ -32,7 +32,6 @@ func NewClient(apiKey, secretKey string, baseURL string) *Client {
 		UserAgent:  "convmic/golang",
 		BaseURL:    baseURL,
 		HTTPClient: http.DefaultClient,
-		Logger:     log.New(os.Stderr, "convmic-golang ", log.LstdFlags),
 	}
 }
 
@@ -56,6 +55,7 @@ func doReq(req *http.Request, client *http.Client) ([]byte, error) {
 func (c *Client) MakeReq(apiUrl string, params url.Values) ([]byte, error) {
 
 	url := fmt.Sprintf("%s/%s?%s", c.BaseURL, apiUrl, params.Encode())
+	//log.Infof("Request to %s", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err

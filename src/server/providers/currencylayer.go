@@ -15,9 +15,10 @@ type CurrencylayerProvider struct {
 	Name   string
 	c      *internal.Client
 	market string
+	ctx    context.Context
 }
 
-func NewCurrencylayerProvider(APIKey, SecretKey string) *CoingeckoProvider {
+func NewCurrencylayerProvider(ctx context.Context, APIKey, SecretKey string) *CoingeckoProvider {
 	return &CoingeckoProvider{
 		Name:   "Currencylayer",
 		c:      internal.NewClient(APIKey, SecretKey, CurrencylayerBaseURL),
@@ -30,12 +31,12 @@ func (p *CurrencylayerProvider) Convert(ctx context.Context, from []model.Curren
 	return []model.CurrencyConverted{}, nil
 }
 
-func (p *CurrencylayerProvider) SyncCurrencies(period int) (bool,error) {
+func (p *CurrencylayerProvider) SyncCurrencies(period, page int) (bool, error) {
 	//must be implemented
 	return true, nil
 }
 
-func (p *CurrencylayerProvider) GetCurrencies(ctx context.Context) ([]model.Currency, error) {
+func (p *CurrencylayerProvider) PopulateProviderCurrencies(ctx context.Context) error {
 	//must be implemented
-	return []model.Currency{}, nil
+	return nil
 }

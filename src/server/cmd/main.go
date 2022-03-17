@@ -44,7 +44,7 @@ func main() {
 	helper.PopulateData(internal.GetInstance())
 
 	//set the provider, it wil be loaded from config
-	provider := providers.NewCoingeckoProvider()
+	provider := providers.NewCoingeckoProvider(context.Background())
 
 	//Load all currencies from provider and set the price
 	err := syncAllCurrencies(provider)
@@ -117,7 +117,7 @@ func (s *server) Convert(ctx context.Context, req *pb.GetCurrenciesConvertReques
 
 func syncAllCurrencies(provider service.Provider) error {
 	//to be be implemented
-	//provider.GetCurrencies(context.Background())
+	go provider.SyncCurrencies(0, 2)
 	return nil
 }
 
