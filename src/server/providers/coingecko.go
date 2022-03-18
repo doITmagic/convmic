@@ -56,9 +56,10 @@ func NewCoingeckoProvider(ctx context.Context) *CoingeckoProvider {
 
 func (p *CoingeckoProvider) Convert(ctx context.Context, from []model.CurrencyConvert, to string) ([]model.CurrencyConverted, error) {
 
+	var covertedResponse []model.CurrencyConverted
 	appContext := internal.GetInstance()
 	toCurrencyValue, err := appContext.GetCurrencyValue(to)
-	if err == nil {
+	if err != nil {
 		return []model.CurrencyConverted{}, fmt.Errorf("can not convert to currency %s because does not exist", to)
 	}
 
@@ -67,14 +68,15 @@ func (p *CoingeckoProvider) Convert(ctx context.Context, from []model.CurrencyCo
 		if err == nil {
 			fromCurrencyTotalValue := currencyConvert.Amount * value
 			if fromCurrencyTotalValue > 0 {
-				log.Info("Privider Convert",fromCurrencyTotalValue,toCurrencyValue)
+				log.Info("Privider Convert", fromCurrencyTotalValue, toCurrencyValue)
 				rez := fromCurrencyTotalValue / toCurrencyValue
 				fmt.Printf("%v ammount of currency %s represent %v of currency %s  \n", currencyConvert.Amount, currencyConvert.Name, rez, to)
+				covertedResponse = append(covertedResponse, model.CurrencyConverted{From: currencyConvert.Name, FromAmount: currencyConvert.Amount, To: to, ToAmount: rez})
 			}
 		}
 	}
 
-	return []model.CurrencyConverted{}, nil
+	return covertedResponse, nil
 }
 
 //SyncCurrencies get the currencies values with limited pages,

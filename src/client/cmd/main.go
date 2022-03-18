@@ -50,7 +50,7 @@ func Convert(client pb.ConvertServiceClient) {
 	currencies := []*pb.CurrencyConvert{}
 	currencies = append(currencies, &pb.CurrencyConvert{CurrencyName: "Atest1", CurrencyQty: 2})
 	//currencies = append(currencies, &pb.CurrencyConvert{CurrencyName: "Atest10", CurrencyQty: 3})
-	resp, err := client.Convert(ctx, &pb.GetCurrenciesConvertRequest{From: currencies, To: "Atest2"})
+	resp, err := client.Convert(ctx, &pb.GetCurrenciesConvertRequest{From: currencies, To: "Algorand"})
 	fmt.Println(resp, err)
 }
 
