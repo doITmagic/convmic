@@ -48,9 +48,9 @@ func main() {
 func Convert(client pb.ConvertServiceClient) {
 	ctx := context.Background()
 	currencies := []*pb.CurrencyConvert{}
-	currencies = append(currencies, &pb.CurrencyConvert{CurrencyName: "Atest1", CurrencyQty: 2})
+	currencies = append(currencies, &pb.CurrencyConvert{CurrencyName: "Algorand", CurrencyQty: 2})
 	//currencies = append(currencies, &pb.CurrencyConvert{CurrencyName: "Atest10", CurrencyQty: 3})
-	resp, err := client.Convert(ctx, &pb.GetCurrenciesConvertRequest{From: currencies, To: "Algorand"})
+	resp, err := client.Convert(ctx, &pb.GetCurrenciesConvertRequest{From: currencies, To: "Fantom"})
 	fmt.Println(resp, err)
 }
 

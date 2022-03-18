@@ -44,7 +44,7 @@ go test
   go run main.go -c list -p 1 -pp 10
 
   # convert one or multiple currencies  `-c` is command, `-p` page, `-pp` records per page 
-  # the currecies to convert is hardcoded in main.go 
+  # the currecies to convert is hardcoded in main.go , use the list to view and change currencies
   go run main.go -c convert 
 
 ``` 

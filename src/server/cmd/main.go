@@ -12,7 +12,6 @@ import (
 	profile "github.com/pkg/profile"
 
 	"github.com/doitmagic/convmic/pb"
-	"github.com/doitmagic/convmic/src/server/helper"
 	"github.com/doitmagic/convmic/src/server/internal"
 	"github.com/doitmagic/convmic/src/server/model"
 	"github.com/doitmagic/convmic/src/server/providers"
@@ -44,12 +43,10 @@ func main() {
 		log.Printf("Start CPU profiling")
 	}
 
-	//populate dummy data
-	helper.PopulateData(internal.GetInstance())
+	//populate first data
+	provider.SyncCurrencies(4)
 
-	//set the provider, it wil be loaded from config
-
-	//Load all currencies from provider and set the price
+	//start Ticker to Load all currencies from provider and set the price
 	//on provided seconds interval
 	go syncAllCurrencies(provider, 10)
 
@@ -87,7 +84,7 @@ func (s *server) List(ctx context.Context, req *pb.GetListCurrenciesRequest) (*p
 
 	currencies := []*pb.Currency{}
 
-	//get onlu currecies from requested page
+	//get all currecies from requested page
 	paginatedCurrencies := internal.GetInstance().GetCurrenciesByPage(page, perPage)
 
 	if len(paginatedCurrencies) > 0 {
@@ -115,7 +112,7 @@ func (s *server) Convert(ctx context.Context, req *pb.GetCurrenciesConvertReques
 		log.Infof("receive request to convert %v of %s to %s", currencyPb.GetCurrencyQty(), currencyPb.GetCurrencyName(), toCurrency)
 	}
 
-	convertedResp, err := ConvertCurrencies(provider, ctx, fromCurrenciesConvert, toCurrency)
+	convertedResp, err := convertCurrencies(provider, ctx, fromCurrenciesConvert, toCurrency)
 	if err != nil {
 		return &pb.GetCurrenciesConvertResponse{}, err
 	}
@@ -123,6 +120,7 @@ func (s *server) Convert(ctx context.Context, req *pb.GetCurrenciesConvertReques
 	return convertedResp, nil
 }
 
+//syncAllCurrencies private, start ticker to sync currencies by seconds
 func syncAllCurrencies(provider service.Provider, secondsInterval int) {
 	d := time.NewTicker(time.Duration(secondsInterval) * time.Second)
 	for tm := range d.C {
@@ -132,7 +130,8 @@ func syncAllCurrencies(provider service.Provider, secondsInterval int) {
 
 }
 
-func ConvertCurrencies(provider service.Provider, ctx context.Context, from []model.CurrencyConvert, to string) (*pb.GetCurrenciesConvertResponse, error) {
+//convertCurrencies private, dealing with the convert process
+func convertCurrencies(provider service.Provider, ctx context.Context, from []model.CurrencyConvert, to string) (*pb.GetCurrenciesConvertResponse, error) {
 	converted, err := provider.Convert(ctx, from, to)
 	if err != nil {
 		return nil, err

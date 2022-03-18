@@ -54,6 +54,7 @@ func NewCoingeckoProvider(ctx context.Context) *CoingeckoProvider {
 	}
 }
 
+//Convert convert from currency to currency using value from context currencies varible
 func (p *CoingeckoProvider) Convert(ctx context.Context, from []model.CurrencyConvert, to string) ([]model.CurrencyConverted, error) {
 
 	var covertedResponse []model.CurrencyConverted
@@ -61,6 +62,9 @@ func (p *CoingeckoProvider) Convert(ctx context.Context, from []model.CurrencyCo
 	toCurrencyValue, err := appContext.GetCurrencyValue(to)
 	if err != nil {
 		return []model.CurrencyConverted{}, fmt.Errorf("can not convert to currency %s because does not exist", to)
+	}
+	if toCurrencyValue == 0 {
+		return []model.CurrencyConverted{}, fmt.Errorf("can not convert to currency %s because it has 0.0", to)
 	}
 
 	for _, currencyConvert := range from {

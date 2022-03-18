@@ -99,6 +99,7 @@ func (c *AppContext) GetCurrencyValue(name string) (float64, error) {
 	return 0, fmt.Errorf("the currency %s does not exist", name)
 }
 
+//SetCurrency set or update currency value
 func (c *AppContext) SetCurrency(name string, val float64) {
 	//convert float64 to string
 	valueString := strconv.FormatFloat(val, 'f', 2, 64)

@@ -21,9 +21,9 @@ type Client struct {
 	Debug      bool
 	Logger     *log.Logger
 	TimeOffset int64
-	do         doFunc
 }
 
+//create nre httpc client
 func NewClient(apiKey, secretKey string, baseURL string) *Client {
 	return &Client{
 		UseAuth:    false,
@@ -35,6 +35,7 @@ func NewClient(apiKey, secretKey string, baseURL string) *Client {
 	}
 }
 
+//get the request and return it like []byte
 func doReq(req *http.Request, client *http.Client) ([]byte, error) {
 	resp, err := client.Do(req)
 	if err != nil {

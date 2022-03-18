@@ -1,8 +1,6 @@
 package testing
 
 import (
-	
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -23,7 +21,7 @@ var _ = Describe("Internal tests", func() {
 		It("you must add currency record to currencies variable", func() {
 
 			//populate dummy data
-			totalRecordsNr :=  helper.PopulateData(appcontext)
+			totalRecordsNr := helper.PopulateData(appcontext)
 			//get all currencies
 			currenciesNr := appcontext.CountCurrencies()
 
@@ -38,4 +36,3 @@ var _ = Describe("Internal tests", func() {
 
 	})
 })
-
